@@ -12,4 +12,5 @@ docker build -t ahhatem/webapp:$tag .
 #3- Init the correct kubernetes profile
 
 #4- Kubernetes apply
-find Kubernetes -type f | xargs -I % bash -c 'cat %|envsubst|kubectl apply -f -'
+export sysloghost='rsyslog-server-service'
+find Kubernetes -type f -name '*.yaml' | xargs -I % bash -c 'tee /dev/tty | cat %|envsubst | sed -e 's/\$\\-/$/g' | kubectl apply -f -; echo -e -----\>% done; sleep 2'

@@ -2,6 +2,7 @@ FROM node:12.18.3-alpine3.12
 RUN apk update
 RUN apk add bash
 RUN apk add curl
+RUN apk add -U util-linux
 WORKDIR /app
 COPY ./devops-exercises .
 COPY ./Start.sh .

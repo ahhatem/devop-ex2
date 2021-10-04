@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rsyslog-server
+  labels:
+    app: rsyslog-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rsyslog-server
+  template:
+    metadata:
+      labels:
+        app: rsyslog-server
+    spec:
+      containers:
+      - name: rsyslog-server
+        image: jumanjiman/rsyslog:latest
+        ports:
+        - containerPort: 514
+          name: tcp
+          protocol: TCP
+        - containerPort: 514
+          name: upd
+          protocol: UDP
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/rsyslog.d
+      volumes:
+      - name: config-volume
+        configMap:
+          name: rsyslog-d
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rsyslog-d
+  labels:
+    app: rsyslog-server
+data:
+  filelog.conf: |
+    $-template RemoteLogs,"/var/log/%HOSTNAME%/%PROGRAMNAME%.log"
+    *.* ?RemoteLogs
+    & ~
+  imtcp.conf: |
+    module(load="imtcp")
+    input(type="imtcp" port="514")
+  imudp.conf: |
+    module(load="imudp")
+    input(type="imudp" port="514")
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rsyslog-server-service
+  labels:
+    app: rsyslog-server
+spec:
+  ports:
+  - name: tcp
+    port: 514
+    protocol: TCP
+  selector:
+    app: rsyslog-server
+  type: NodePort
